@@ -1,1 +1,1 @@
-A terminal program created to manage a large playlist of song and artist recommendations named Music List using the Spotify Web API
+A terminal program created to manage the Music List playlist (large collection of song and artist recommendations) using the Spotify Web API
