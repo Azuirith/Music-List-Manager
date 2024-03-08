@@ -40,7 +40,7 @@ def get_url_header(url, header):
 
     return parsed_header
 
-def request_authorization(): 
+def request_token(): 
     # Done for security check
     state = generate_authorization_state(length=16) 
 
@@ -69,6 +69,10 @@ def request_authorization():
             "client_secret": CLIENT_SECRET}
 
     response = post(url, data=body)
-    print(loads(response.content)["expires_in"])
+    STATUS_CODE_OK = 200
+    if (not response.status_code == STATUS_CODE_OK):
+        raise Exception
     
-request_authorization()
+    return response.json["access_token"]
+
+request_token()
