@@ -4,7 +4,6 @@ from random import randint
 from selenium import webdriver
 from time import sleep
 from requests import get, post
-from json import loads
 
 load_dotenv()
 CLIENT_ID = environ["CLIENT_ID"]
@@ -71,8 +70,73 @@ def request_token():
     response = post(url, data=body)
     STATUS_CODE_OK = 200
     if (not response.status_code == STATUS_CODE_OK):
-        raise Exception
+        raise Exception("Error: Failed to grab authorization token.")
     
-    return response.json["access_token"]
+    return response.json()["access_token"]
 
-request_token()
+def prompt_action_select():
+    print("Select action:")
+    print("1: Add artist")
+    print("2: Remove artist")
+    print("3: Add album")
+    print("4: Remove album")
+    print("5: Add song")
+    print("6: Remove song")
+    print("7: Quit\n")
+    return input()
+
+def add_artist(token, title):
+    pass
+
+def remove_artist(token, title):
+    pass
+
+def add_album(token, title):
+    pass
+
+def remove_album(token, title):
+    pass
+
+def add_song(token, title):
+    pass
+
+def remove_song(token, title):
+    pass
+
+print("### Music List Manager ###")
+
+print("Authorizing user...")
+token = request_token()
+print("\nUser authorized.") # New line to space message from window library output
+
+program_running = True
+while (program_running):
+    selected_action = prompt_action_select()
+    try:
+        selected_action = int(selected_action)
+    except:
+        print("Invalid input.\n")
+        continue
+
+    match selected_action:
+        case 1:
+            name = input("Enter artist name: ")
+            add_artist(token, name)
+        case 2:
+            name = input("Enter artist name: ")
+            remove_artist(token, name)
+        case 3:
+            title = input("Enter album title: ")
+            add_album(token, title)
+        case 4:
+            title = input("Enter album title: ")
+            remove_album(token, title)
+        case 5:
+            title = input("Enter song title: ")
+            add_song(token, title)
+        case 6:
+            title = input("Enter song title: ")
+            remove_song(token, title)
+        case 7:
+            program_running = False
+            break
