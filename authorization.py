@@ -51,7 +51,6 @@ def request_token(client_id, client_secret, redirect_uri):
     if (returned_state != state):
         raise Exception("Error: Client state and server state do not match.")
 
-    # TODO 
     authorization_code = get_query_parameter(authorized_url, "code")
     url = "https://accounts.spotify.com/api/token"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
