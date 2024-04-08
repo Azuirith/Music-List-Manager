@@ -24,56 +24,108 @@ def prompt_action_select():
     print("7: Quit\n")
     return input()
 
-def add_artist(token, title):
-    pass
-
-def remove_artist(token, title):
-    pass
-
-def add_album(token, title):
-    pass
-
-def remove_album(token, title):
-    pass
-
-def add_song(token, title):
-    # Here because both requests use the same headers
+def search_for_item(token, name, item_type):
     headers = {"Authorization": "Bearer " + token,
                "Content-Type": "application/x-www-form-urlencoded"}
 
-    SEARCH_RETURN_COUNT = 10
     url = "https://api.spotify.com/v1/search?"
-    url += f"q=track:{title}&"
-    url += "type=track&"
-    url += f"limit={SEARCH_RETURN_COUNT}"
+    url += f"q={item_type}:{name}&"
+    url += f"type={item_type}"
+    response = get(url, headers=headers)
+
+    returned_items = response.json()[item_type + "s"]
+    first_item = returned_items["items"][0]
+    return first_item
+
+def add_artist(token, name):
+    pass
+
+def remove_artist(token, name):
+    pass
+
+def add_album(token, title):
+    album_item = search_for_item(token=token, name=title, item_type="album")
+    album_id = album_item["id"]
+
+    headers = {"Authorization": "Bearer " + token,
+               "Content-Type": "application/x-www-form-urlencoded"}
+    
+    url = f"https://api.spotify.com/v1/albums/{album_id}/tracks"
 
     response = get(url, headers=headers)
-    returned_tracks = response.json()["tracks"]
-    song_uri = returned_tracks["items"][0]["uri"]
+    returned_items = response.json()["items"]
+
+    track_uris = []
+    for item in returned_items:
+        track_uris.append(item["uri"])
+
+    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
+    url += "uris="
+    for uri in track_uris: url += uri + ","
+     
+    response = post(url, headers=headers)
+    if response.status_code != STATUS_CODE_OK:
+        print("Error: Failed to add requested album to playlist.\n")
+        print(response.status_code)
+    else:
+        print("Album added successfully.\n")
+
+def remove_album(token, title):
+    album_item = search_for_item(token=token, name=title, item_type="album")
+    album_id = album_item["id"]
+
+    headers = {"Authorization": "Bearer " + token,
+               "Content-Type": "application/x-www-form-urlencoded"}
+    
+    url = f"https://api.spotify.com/v1/albums/{album_id}/tracks"
+
+    response = get(url, headers=headers)
+    returned_items = response.json()["items"]
+
+    track_uris = []
+    for item in returned_items:
+        track_uris.append(item["uri"])
+
+    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
+    
+    track_items = []
+    for uri in track_uris:
+        track_items.append({"uri": uri})
+
+    body = {"tracks": track_items}
+    body = dumps(body)
+
+    response = delete(url, data=body, headers=headers)
+    if response.status_code != STATUS_CODE_OK:
+        print("Error: Failed to remove album.\n")
+        print(response.status_code)
+    else:
+        print("Album removed successfully.\n")
+
+def add_song(token, title):
+    song_item = search_for_item(token=token, name=title, item_type="track")
+    song_uri = song_item["uri"]
+
+    headers = {"Authorization": "Bearer " + token,
+               "Content-Type": "application/x-www-form-urlencoded"}
 
     url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
     url += f"uris={song_uri}"
     
     response = post(url, headers=headers)
+
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested song to playlist.\n")
     else:
         print("Song added successfully.\n")
 
+# TODO: Fix error when song is not found in playlist
 def remove_song(token, title):
+    song_item = search_for_item(token=token, name=title, item_type="track")
+    song_uri = song_item["uri"]
+
     headers = {"Authorization": "Bearer " + token,
                "Content-Type": "application/x-www-form-urlencoded"}
-    
-    SEARCH_RETURN_COUNT = 10
-    url = "https://api.spotify.com/v1/search?"
-    url += f"q=track:{title}&"
-    url += "type=track&"
-    url += f"limit={SEARCH_RETURN_COUNT}"
-
-    response = get(url, headers=headers)
-    returned_tracks = response.json()["tracks"]
-    song_uri = returned_tracks["items"][0]["uri"]
-
     url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
     body = {"tracks": [{"uri": song_uri}]}
     body = dumps(body) # Program seems to think the formatting is wrong without this
