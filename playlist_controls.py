@@ -9,30 +9,31 @@ STATUS_CODE_OK = 200
 load_dotenv()
 PLAYLIST_ID = environ["PLAYLIST_ID"]
 
-def search_for_item(token, name, item_type):
-    headers = {"Authorization": "Bearer " + token,
-               "Content-Type": "application/x-www-form-urlencoded"}
+request_headers = {}
 
+def create_request_headers(token):
+    global request_headers
+    request_headers = {"Authorization": "Bearer " + token,
+                      "Content-Type": "application/x-www-form-urlencoded"}
+
+def search_for_item(name, item_type):
     url = "https://api.spotify.com/v1/search?"
     url += f"q={item_type}:{name}&"
     url += f"type={item_type}"
-    response = get(url, headers=headers)
+    response = get(url, headers=request_headers)
 
     returned_items = response.json()[item_type + "s"]
     first_item = returned_items["items"][0]
     return first_item
 
-def add_artist(token, name):
-    artist_item = search_for_item(token=token, name=name, item_type="artist")
+def add_artist(name):
+    artist_item = search_for_item(name=name, item_type="artist")
     artist_id = artist_item["id"]
-
-    headers = {"Authorization": "Bearer " + token,
-               "Content-Type": "application/x-www-form-urlencoded"}
     
     url = f"https://api.spotify.com/v1/artists/{artist_id}/albums?"
     url += "include_groups=album"
 
-    response = get(url, headers=headers)
+    response = get(url, headers=request_headers)
     returned_albums = response.json()["items"] 
 
     album_ids = []
@@ -42,7 +43,7 @@ def add_artist(token, name):
     for album_id in album_ids:
         url = f"https://api.spotify.com/v1/albums/{album_id}"
 
-        response = get(url, headers=headers)
+        response = get(url, headers=request_headers)
         album_item = response.json()
 
         album_name = album_item["name"]
@@ -56,7 +57,7 @@ def add_artist(token, name):
     for album in top_albums:
         url = f"https://api.spotify.com/v1/albums/{album[1]}/tracks"
 
-        response = get(url, headers=headers)
+        response = get(url, headers=request_headers)
         returned_tracks = response.json()["items"]
 
         for track in returned_tracks: track_uris.append(track["uri"])
@@ -65,7 +66,7 @@ def add_artist(token, name):
     url += "uris="
     for uri in track_uris: url += uri + ","
 
-    response = post(url, headers=headers)
+    response = post(url, headers=request_headers)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested artist to playlist\n")
     else:
@@ -74,16 +75,13 @@ def add_artist(token, name):
 def remove_artist(token, name):
     pass
 
-def add_album(token, title):
-    album_item = search_for_item(token=token, name=title, item_type="album")
+def add_album(name):
+    album_item = search_for_item(name=name, item_type="album")
     album_id = album_item["id"]
-
-    headers = {"Authorization": "Bearer " + token,
-               "Content-Type": "application/x-www-form-urlencoded"}
     
     url = f"https://api.spotify.com/v1/albums/{album_id}/tracks"
 
-    response = get(url, headers=headers)
+    response = get(url, headers=request_headers)
     returned_items = response.json()["items"]
 
     track_uris = []
@@ -94,23 +92,20 @@ def add_album(token, title):
     url += "uris="
     for uri in track_uris: url += uri + ","
      
-    response = post(url, headers=headers)
+    response = post(url, headers=request_headers)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested album to playlist.\n")
         print(response.status_code)
     else:
         print("Album added successfully.\n")
 
-def remove_album(token, title):
-    album_item = search_for_item(token=token, name=title, item_type="album")
+def remove_album(name):
+    album_item = search_for_item(name=name, item_type="album")
     album_id = album_item["id"]
-
-    headers = {"Authorization": "Bearer " + token,
-               "Content-Type": "application/x-www-form-urlencoded"}
     
     url = f"https://api.spotify.com/v1/albums/{album_id}/tracks"
 
-    response = get(url, headers=headers)
+    response = get(url, headers=request_headers)
     returned_items = response.json()["items"]
 
     track_uris = []
@@ -126,24 +121,21 @@ def remove_album(token, title):
     body = {"tracks": track_items}
     body = dumps(body)
 
-    response = delete(url, data=body, headers=headers)
+    response = delete(url, data=body, headers=request_headers)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to remove album.\n")
         print(response.status_code)
     else:
         print("Album removed successfully.\n")
 
-def add_song(token, title):
-    song_item = search_for_item(token=token, name=title, item_type="track")
+def add_song(name):
+    song_item = search_for_item(name=name, item_type="track")
     song_uri = song_item["uri"]
-
-    headers = {"Authorization": "Bearer " + token,
-               "Content-Type": "application/x-www-form-urlencoded"}
 
     url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
     url += f"uris={song_uri}"
     
-    response = post(url, headers=headers)
+    response = post(url, headers=request_headers)
 
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested song to playlist.\n")
@@ -151,17 +143,15 @@ def add_song(token, title):
         print("Song added successfully.\n")
 
 # TODO: Fix error when song is not found in playlist
-def remove_song(token, title):
-    song_item = search_for_item(token=token, name=title, item_type="track")
+def remove_song(name):  
+    song_item = search_for_item(name=name, item_type="track")
     song_uri = song_item["uri"]
 
-    headers = {"Authorization": "Bearer " + token,
-               "Content-Type": "application/x-www-form-urlencoded"}
     url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
     body = {"tracks": [{"uri": song_uri}]}
     body = dumps(body) # Program seems to think the formatting is wrong without this
 
-    response = delete(url, headers=headers, data=body)
+    response = delete(url, headers=request_headers, data=body)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to delete requested song from playlist.\n")
         print(response.json()["error"]["message"])

@@ -25,6 +25,7 @@ print("### Music List Manager ###")
 
 print("Authorizing user...")
 token = authorization.request_token(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+playlist_controls.create_request_headers(token=token)
 print("\nUser authorized.\n") # New line at start to space message from window library output
 
 program_running = True
@@ -36,25 +37,20 @@ while (program_running):
         print("Invalid input.\n")
         continue
 
+    name = ""
+    if selected_action < 7:
+        name = input("Enter name (enter . to cancel): ")
+        if name == ".":
+            print() # New line
+            continue
+
     match selected_action:
-        case 1:
-            name = input("Enter artist name: ")
-            playlist_controls.add_artist(token, name)
-        case 2:
-            name = input("Enter artist name: ")
-            playlist_controls.remove_artist(token, name)
-        case 3:
-            title = input("Enter album title: ")
-            playlist_controls.add_album(token, title)
-        case 4:
-            title = input("Enter album title: ")
-            playlist_controls.remove_album(token, title)
-        case 5:
-            title = input("Enter song title: ")
-            playlist_controls.add_song(token, title)
-        case 6:
-            title = input("Enter song title: ")
-            playlist_controls.remove_song(token, title)
+        case 1: playlist_controls.add_artist(name)
+        case 2: playlist_controls.remove_artist(name)
+        case 3: playlist_controls.add_album(name)
+        case 4: playlist_controls.remove_album(name)
+        case 5: playlist_controls.add_song(name)
+        case 6: playlist_controls.remove_song(name)
         case 7:
             program_running = False
             break
