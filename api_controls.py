@@ -9,13 +9,15 @@ STATUS_CODE_OK = 200
 load_dotenv()
 PLAYLIST_ID = environ["PLAYLIST_ID"]
 
-request_headers = {}
+request_headers = {} # This technically is sorta a constant 
+                     # but it does get changed once at the start of the program
 
 def create_request_headers(token):
     global request_headers
     request_headers = {"Authorization": "Bearer " + token,
                       "Content-Type": "application/x-www-form-urlencoded"}
 
+# TODO: Maybe add some error protection if the item is not found in the search
 def search_for_item(name, item_type):
     url = "https://api.spotify.com/v1/search?"
     url += f"q={item_type}:{name}&"
@@ -23,8 +25,7 @@ def search_for_item(name, item_type):
     response = get(url, headers=request_headers)
 
     returned_items = response.json()[item_type + "s"]
-    first_item = returned_items["items"][0]
-    return first_item
+    return returned_items["items"][0]
 
 def add_artist(name):
     artist_item = search_for_item(name=name, item_type="artist")
@@ -50,7 +51,7 @@ def add_artist(name):
         album_popularity = album_item["popularity"]
         albums.append((album_name, album_id, album_popularity))
 
-    albums = sorted(albums, key=lambda album: album[2], reverse=True)
+    albums = sorted(albums, key=lambda album: album[2], reverse=True) # TODO: write own sorting algorithm for funsies
     top_albums = albums[:3]
 
     track_uris = []
@@ -143,6 +144,7 @@ def add_song(name):
         print("Song added successfully.\n")
 
 # TODO: Fix error when song is not found in playlist
+# TODO: Find a way to search for items quickly in a playlist
 def remove_song(name):  
     song_item = search_for_item(name=name, item_type="track")
     song_uri = song_item["uri"]
