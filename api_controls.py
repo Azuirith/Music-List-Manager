@@ -17,7 +17,6 @@ def create_request_headers(token):
     request_headers = {"Authorization": "Bearer " + token,
                       "Content-Type": "application/x-www-form-urlencoded"}
 
-# TODO: Maybe add some error protection if the item is not found in the search
 def search_for_item(name, item_type):
     url = "https://api.spotify.com/v1/search?"
     url += f"q={item_type}:{name}&"
@@ -143,7 +142,6 @@ def add_song(name):
     else:
         print("Song added successfully.\n")
 
-# TODO: Fix error when song is not found in playlist
 # TODO: Find a way to search for items quickly in a playlist
 def remove_song(name):  
     song_item = search_for_item(name=name, item_type="track")
