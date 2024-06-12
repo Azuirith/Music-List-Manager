@@ -21,10 +21,10 @@ def search_for_item(name, item_type):
     url = "https://api.spotify.com/v1/search?"
     url += f"q={item_type}:{name}&"
     url += f"type={item_type}"
-    response = get(url, headers=request_headers)
 
-    returned_items = response.json()[item_type + "s"]
-    return returned_items["items"][0]
+    response = get(url, headers=request_headers)
+    returned_object = response.json()[item_type + "s"]
+    return returned_object["items"][0]
 
 def add_artist(name):
     artist_item = search_for_item(name=name, item_type="artist")
@@ -62,11 +62,7 @@ def add_artist(name):
 
         for track in returned_tracks: track_uris.append(track["uri"])
 
-    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
-    url += "uris="
-    for uri in track_uris: url += uri + ","
-
-    response = post(url, headers=request_headers)
+    response = add_songs_from_uris(track_uris)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested artist to playlist\n")
     else:
@@ -85,17 +81,12 @@ def add_album(name):
     returned_items = response.json()["items"]
 
     track_uris = []
-    for item in returned_items:
+    for item in returned_items: 
         track_uris.append(item["uri"])
 
-    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
-    url += "uris="
-    for uri in track_uris: url += uri + ","
-     
-    response = post(url, headers=request_headers)
+    response = add_songs_from_uris(track_uris)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested album to playlist.\n")
-        print(response.status_code)
     else:
         print("Album added successfully.\n")
 
@@ -108,23 +99,13 @@ def remove_album(name):
     response = get(url, headers=request_headers)
     returned_items = response.json()["items"]
 
-    track_uris = []
+    uris = []
     for item in returned_items:
-        track_uris.append(item["uri"])
+        uris.append(item["uri"])
 
-    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
-    
-    track_items = []
-    for uri in track_uris:
-        track_items.append({"uri": uri})
-
-    body = {"tracks": track_items}
-    body = dumps(body)
-
-    response = delete(url, data=body, headers=request_headers)
+    response = remove_songs_from_uris(uris)
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to remove album.\n")
-        print(response.status_code)
     else:
         print("Album removed successfully.\n")
 
@@ -132,28 +113,39 @@ def add_song(name):
     song_item = search_for_item(name=name, item_type="track")
     song_uri = song_item["uri"]
 
-    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
-    url += f"uris={song_uri}"
-    
-    response = post(url, headers=request_headers)
-
+    response = add_songs_from_uris([song_uri]) 
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to add requested song to playlist.\n")
     else:
         print("Song added successfully.\n")
 
-# TODO: Find a way to search for items quickly in a playlist
 def remove_song(name):  
     song_item = search_for_item(name=name, item_type="track")
     song_uri = song_item["uri"]
 
-    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
-    body = {"tracks": [{"uri": song_uri}]}
-    body = dumps(body) # Program seems to think the formatting is wrong without this
-
-    response = delete(url, headers=request_headers, data=body)
+    response = remove_songs_from_uris([song_uri])
     if response.status_code != STATUS_CODE_OK:
         print("Error: Failed to delete requested song from playlist.\n")
-        print(response.json()["error"]["message"])
     else:
         print("Song deleted succesfully.\n")
+
+def add_songs_from_uris(uris):
+    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks?"
+    url += "uris="
+    for uri in uris: url += uri + ","
+
+    response = post(url, headers=request_headers)
+    return response
+
+def remove_songs_from_uris(uris):
+    url = f"https://api.spotify.com/v1/playlists/{PLAYLIST_ID}/tracks"
+
+    formatted_uris = []
+    for uri in uris:
+        formatted_uris.append({"uri": uri})
+
+    body = {"tracks": formatted_uris}
+    body = dumps(body)
+
+    response = delete(url, headers=request_headers, data=body)
+    return response
