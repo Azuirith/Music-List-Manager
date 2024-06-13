@@ -36,9 +36,9 @@ while (program_running):
         continue
 
     match selected_action:
-        case Action.ADD_ARTIST: api_controls.add_artist(name)
-        case Action.REMOVE_ARTIST: api_controls.remove_artist(name)
-        case Action.ADD_ALBUM: api_controls.add_album(name)
-        case Action.REMOVE_ALBUM: api_controls.remove_album(name)
-        case Action.ADD_SONG: api_controls.add_song(name)
-        case Action.REMOVE_SONG: api_controls.remove_song(name)
+        case Action.ADD_ARTIST: api_controls.manage_artist(name, "add")
+        case Action.REMOVE_ARTIST: api_controls.manage_artist(name, "remove")
+        case Action.ADD_ALBUM: api_controls.manage_album(name, "add")
+        case Action.REMOVE_ALBUM: api_controls.manage_album(name, "remove")
+        case Action.ADD_SONG: api_controls.manage_song(name, "add")
+        case Action.REMOVE_SONG: api_controls.manage_song(name, "remove")

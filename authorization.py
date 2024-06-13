@@ -9,7 +9,6 @@ def generate_authorization_state(length):
     return state
 
 def prompt_authorization_window(url):
-    # TODO: Account for case when code is never in url
     browser = webdriver.Chrome()
     browser.get(url)
 
@@ -34,7 +33,6 @@ def get_query_parameter(url, parameter):
 
     return parsed_parameter
 
-# TODO: Break this up into multiple functions
 def request_token(client_id, client_secret, redirect_uri): 
     # Done for security check later on
     state = generate_authorization_state(length=16) 
